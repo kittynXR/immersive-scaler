@@ -1,0 +1,27 @@
+{
+  "name": "cat.kittyn.immersive-scaler",
+  "displayName": "cátte — Immersive Scaler",
+  "version": "1.0.0",
+  "unity": "2019.4",
+  "unityRelease": "31f1",
+  "description": "Rizz up your immersion! No blender required and non-destructive!",
+  "type": "Avatar",
+  "author": {
+    "name": "kittyn",
+    "email": "cat@kittyn.cat",
+    "url": "https://kittyn.cat"
+  },
+  "license": "MIT",
+  "licensesUrl": "https://github.com/kittynXR/immersive-scaler/blob/main/LICENSE",
+  "changelogUrl": "https://github.com/kittynXR/immersive-scaler/releases",
+  "documentationUrl": "https://github.com/kittynXR/immersive-scaler#readme",
+  "dependencies": {},
+  "vpmDependencies": {"com.vrchat.avatars": ">=3.7.0"},
+  "keywords": [
+    "vrchat",
+    "unity",
+    "tool"
+  ],
+  "url": "https://github.com/kittynXR/immersive-scaler/releases/download/v{VERSION}/cat.kittyn.immersive-scaler-{VERSION}.zip",
+  "samples": []
+}
