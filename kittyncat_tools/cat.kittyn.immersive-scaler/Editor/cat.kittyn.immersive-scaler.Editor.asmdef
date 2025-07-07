@@ -1,9 +1,12 @@
 {
-    "name": "cat.kittyn.immersive-scaler.Editor",
-    "rootNamespace": "cat.kittyn.immersive-scaler.Editor",
+    "name": "VRChatImmersiveScaler.Editor",
+    "rootNamespace": "VRChatImmersiveScaler.Editor",
     "references": [
+        "VRChatImmersiveScaler.Runtime",
+        "VRC.SDKBase",
         "VRC.SDK3A",
-        "VRC.SDK3A.Editor"
+        "nadena.dev.ndmf",
+        "nadena.dev.ndmf.runtime"
     ],
     "includePlatforms": [
         "Editor"
@@ -11,10 +14,20 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "precompiledReferences": [
-    ],
+    "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.vrchat.avatars",
+            "expression": "",
+            "define": "VRC_SDK_VRCSDK3"
+        },
+        {
+            "name": "nadena.dev.ndmf",
+            "expression": "",
+            "define": "NDMF_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }
