@@ -287,7 +287,7 @@ namespace VRChatImmersiveScaler
 #endif
         }
         
-        [MenuItem("Tools/Immersive Avatar Scaler")]
+        [MenuItem("Tools/⚙️🎨 kittyn.cat 🐟/🐟 Immersive Avatar Scaler", false, 1000)]
         public static void ShowWindow()
         {
             var window = GetWindow<ImmersiveScalerWindow>("Immersive Avatar Scaler");
