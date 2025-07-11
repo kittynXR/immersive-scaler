@@ -2,7 +2,7 @@
 
 Rizz up your immersion! No blender required and non-destructive!
 
-![Avatar Scaling Screenshot](https://via.placeholder.com/800x400/2D3748/FFFFFF?text=Immersive+Avatar+Scaler+Screenshot)
+![Immersive Avatar Scaler](./screenshots/immersive-scaler-hero-image.png)
 
 ## Installation
 
@@ -119,13 +119,13 @@ Rizz up your immersion! No blender required and non-destructive!
 
 ## Screenshots
 
-![Main Interface](https://via.placeholder.com/600x500/2D3748/FFFFFF?text=Immersive+Scaler+Main+Interface)
-*Main Immersive Scaler interface with measurement and scaling controls*
+![Complete Tool Interface](./screenshots/interface/immersive-scaler-window-complete.png)
+*Complete Immersive Scaler interface with measurement and scaling controls*
 
-![Measurement Visualization](https://via.placeholder.com/600x400/2D3748/FFFFFF?text=Scene+Measurement+Gizmos)
+![Measurement Gizmos](./screenshots/features/immersive-scaler-measurement-gizmos.png)
 *Scene view showing measurement gizmos and scaling preview*
 
-![Before and After](https://via.placeholder.com/800x400/2D3748/FFFFFF?text=Avatar+Before+and+After+Scaling)
+![Height Scaling Comparison](./screenshots/before-after/immersive-scaler-height-comparison.png)
 *Avatar before and after scaling with proportional adjustments*
 
 ## Why Immersive Scaler?
