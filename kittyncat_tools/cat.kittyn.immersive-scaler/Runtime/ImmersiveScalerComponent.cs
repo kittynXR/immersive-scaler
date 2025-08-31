@@ -1,5 +1,26 @@
 using UnityEngine;
 
+// Conditionally enable Modular Avatar integration without hard dependency.
+// When MA is installed (UPM package id: nadena.dev.modular-avatar),
+// asmdef versionDefines will add HAS_MODULAR_AVATAR and we derive from AvatarTagComponent
+// so VRC SDK doesn't warn in Control Panel. Otherwise we remain a plain editor-only component.
+#if HAS_MODULAR_AVATAR
+using nadena.dev.modular_avatar.core;
+#endif
+
+// Provide a fallback IEditorOnly interface if VRC SDK isn't present, so this compiles in non-VRChat projects
+#if VRC_SDK_VRCSDK3
+using VRC.SDKBase;
+#else
+namespace VRC.SDKBase { public interface IEditorOnly {} }
+#endif
+
+#if HAS_MODULAR_AVATAR
+using ComponentBase = nadena.dev.modular_avatar.core.AvatarTagComponent;
+#else
+using ComponentBase = UnityEngine.MonoBehaviour;
+#endif
+
 namespace VRChatImmersiveScaler
 {
     // Measurement method enums
@@ -28,7 +49,13 @@ namespace VRChatImmersiveScaler
     
     [AddComponentMenu("VRChat/🐟 Immersive Scaler 📐📏🎨")]
     [DisallowMultipleComponent]
-    public class ImmersiveScalerComponent : MonoBehaviour
+    // Derive from MA's AvatarTagComponent when available to get allowlist behavior;
+    // otherwise fall back to MonoBehaviour and implement IEditorOnly so it gets stripped.
+#if HAS_MODULAR_AVATAR
+    public class ImmersiveScalerComponent : ComponentBase
+#else
+    public class ImmersiveScalerComponent : ComponentBase, IEditorOnly
+#endif
     {
         [Header("Basic Settings")]
         [Tooltip("Target height of the avatar in meters")]
