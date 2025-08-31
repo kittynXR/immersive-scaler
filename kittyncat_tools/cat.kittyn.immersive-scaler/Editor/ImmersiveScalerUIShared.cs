@@ -109,8 +109,8 @@ namespace VRChatImmersiveScaler
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 
                 // Show both heights for reference
-                float totalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
-                float eyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint();
+                float totalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
+                float eyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                 DrawMeasurementWithToggle(parameters, "Total Height:", $"{totalHeight:F3}m", "total_height");
                 DrawMeasurementWithToggle(parameters, "Eye Height:", $"{eyeHeight:F3}m", "eye_height");
                 
@@ -132,12 +132,12 @@ namespace VRChatImmersiveScaler
                 
                 if (parameters.upperBodyUseLegacy)
                 {
-                    upperBodyRatio = scalerCore.GetUpperBodyPortion();
+                    upperBodyRatio = scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation);
                     upperBodyDesc = "Legacy (Leg→Eye/Floor→Eye)";
                 }
                 else
                 {
-                    upperBodyRatio = scalerCore.GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck);
+                    upperBodyRatio = scalerCore.GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation);
                     upperBodyDesc = $"{(parameters.upperBodyTorsoUseNeck ? "Leg→Neck" : "Leg→Head")} / {(parameters.upperBodyUseNeck ? "Floor→Neck" : "Floor→Head")}";
                 }
                 
@@ -194,8 +194,8 @@ namespace VRChatImmersiveScaler
                 
                 // Height Method group
                 EditorGUILayout.LabelField("Height Method:", EditorStyles.boldLabel);
-                float totalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
-                float eyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint();
+                float totalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
+                float eyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                 DrawMeasurementWithSelectors(parameters, "Total Height:", $"{totalHeight:F3}m", "total_height", true, false, false);
                 DrawMeasurementWithSelectors(parameters, "Eye Height:", $"{eyeHeight:F3}m", "eye_height_debug", true, false, false);
                 
@@ -206,8 +206,8 @@ namespace VRChatImmersiveScaler
                 
                 // Height measurements
                 EditorGUILayout.LabelField("Height Measurement (denominator):", EditorStyles.miniBoldLabel);
-                DrawMeasurementWithSelectors(parameters, "Floor to Neck:", $"{scalerCore.GetHeadHeight():F3}m", "neck_height", false, false, true);
-                DrawMeasurementWithSelectors(parameters, "Floor to Head:", $"{scalerCore.GetFloorToHeadHeight():F3}m", "head_height", false, false, true);
+                DrawMeasurementWithSelectors(parameters, "Floor to Neck:", $"{scalerCore.GetHeadHeight(parameters.useBoneBasedFloorCalculation):F3}m", "neck_height", false, false, true);
+                DrawMeasurementWithSelectors(parameters, "Floor to Head:", $"{scalerCore.GetFloorToHeadHeight(parameters.useBoneBasedFloorCalculation):F3}m", "head_height", false, false, true);
                 
                 EditorGUILayout.Space(5);
                 
@@ -231,7 +231,7 @@ namespace VRChatImmersiveScaler
                 
                 // Legacy method
                 EditorGUILayout.LabelField("Legacy Method:", EditorStyles.miniBoldLabel);
-                DrawMeasurementWithSelectors(parameters, "Legacy (Leg→Eye/Floor→Eye):", $"{scalerCore.GetUpperBodyPortion() * 100f:F1}%", "upper_body_legacy", false, false, true);
+                DrawMeasurementWithSelectors(parameters, "Legacy (Leg→Eye/Floor→Eye):", $"{scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) * 100f:F1}%", "upper_body_legacy", false, false, true);
                 
                 EditorGUILayout.Space(10);
                 
@@ -246,11 +246,11 @@ namespace VRChatImmersiveScaler
                 if (showDebugRatios)
                 {
                     EditorGUI.indentLevel++;
-                    float debugTotalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
-                    float debugEyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint();
+                    float debugTotalHeight = scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
+                    float debugEyeHeight = scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                     
-                    DrawMeasurementWithToggle(parameters, "Simple Arm/Height:", $"{scalerCore.GetSimpleArmRatio():F4}", "simple_arm_height");
-                    DrawMeasurementWithToggle(parameters, "Arm/Eye Height:", $"{scalerCore.GetArmToEyeRatio():F4}", "arm_eye_height");
+                    DrawMeasurementWithToggle(parameters, "Simple Arm/Height:", $"{scalerCore.GetSimpleArmRatio(parameters.useBoneBasedFloorCalculation):F4}", "simple_arm_height");
+                    DrawMeasurementWithToggle(parameters, "Arm/Eye Height:", $"{scalerCore.GetArmToEyeRatio(parameters.useBoneBasedFloorCalculation):F4}", "arm_eye_height");
                     DrawMeasurementWithToggle(parameters, "Head-to-T-pose/Eye Height:", $"{scalerCore.GetCurrentScaling():F4}", "head_tpose_eye_height");
                     
                     // Additional calculations
@@ -260,7 +260,7 @@ namespace VRChatImmersiveScaler
                     DrawMeasurementWithToggle(parameters, "Shoulder-Fingertip/Eye Height:", $"{shoulderToFingertipEyeRatio:F4}", "shoulder_fingertip_eye_height");
                     
                     // Upper body calculations
-                    DrawMeasurementWithToggle(parameters, "Upper Body % (Leg→Neck/Floor→Eye):", $"{scalerCore.GetUpperBodyPortion() * 100f:F1}%", "upper_body_percent");
+                    DrawMeasurementWithToggle(parameters, "Upper Body % (Leg→Neck/Floor→Eye):", $"{scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) * 100f:F1}%", "upper_body_percent");
                     DrawMeasurementWithToggle(parameters, "Alternate Upper Body %:", $"{scalerCore.GetAlternateUpperBodyRatio() * 100f:F1}%", "alternate_upper_body_percent");
                     
                     DrawMeasurementWithToggle(parameters, "Head-to-Hand/Eye Height:", $"{scalerCore.GetHeadWristToEyeRatio():F4}", "head_hand_eye_ratio");
@@ -324,11 +324,11 @@ namespace VRChatImmersiveScaler
                 float upperBodyRatio;
                 if (parameters.upperBodyUseLegacy)
                 {
-                    upperBodyRatio = scalerCore.GetUpperBodyPortion();
+                    upperBodyRatio = scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation);
                 }
                 else
                 {
-                    upperBodyRatio = scalerCore.GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck);
+                    upperBodyRatio = scalerCore.GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation);
                 }
                 parameters.upperBodyPercentage = upperBodyRatio * 100f;
                 parameters.SetDirty();
@@ -899,7 +899,7 @@ namespace VRChatImmersiveScaler
                 case "current_height":
                 case "total_height":
                     {
-                        float lowest = scalerCore.GetLowestPoint();
+                        float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                         float highest = scalerCore.GetHighestPoint();
                         Vector3 start = new Vector3(0, lowest, 0);
                         Vector3 end = new Vector3(0, highest, 0);
@@ -910,7 +910,7 @@ namespace VRChatImmersiveScaler
                 case "eye_height":
                 case "eye_height_debug":
                     {
-                        float lowest = scalerCore.GetLowestPoint();
+                        float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                         Vector3 start = new Vector3(0, lowest, 0);
                         Vector3 end = new Vector3(0, scalerCore.GetEyeHeight(), 0);
                         DrawHandlesLine(start, end, Color.green);
@@ -946,7 +946,7 @@ namespace VRChatImmersiveScaler
                             if (leftLeg != null && rightLeg != null)
                             {
                                 float legY = (leftLeg.position.y + rightLeg.position.y) / 2f;
-                                float lowest = scalerCore.GetLowestPoint();
+                                float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                                 
                                 // Draw torso measurement (green)
                                 if (parameters.upperBodyTorsoUseNeck && neck != null)
@@ -983,7 +983,7 @@ namespace VRChatImmersiveScaler
                         DrawMeasurementWithHandles(GetMeasurementKeyForArmType(parameters.armToHeightRatioMethod), scalerCore, parameters, avatar);
                         
                         // Then draw the height measurement
-                        float lowest = scalerCore.GetLowestPoint();
+                        float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                         if (parameters.armToHeightHeightMethod == HeightMethodType.EyeHeight)
                         {
                             DrawHandlesLine(new Vector3(0.1f, lowest, 0), new Vector3(0.1f, scalerCore.GetEyeHeight(), 0), Color.blue);
@@ -1123,7 +1123,7 @@ namespace VRChatImmersiveScaler
                         var neck = scalerCore.GetBone(HumanBodyBones.Neck);
                         if (neck != null)
                         {
-                            float lowest = scalerCore.GetLowestPoint();
+                            float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                             Vector3 start = new Vector3(neck.position.x, lowest, neck.position.z);
                             DrawHandlesLine(start, neck.position, Color.green);
                         }
@@ -1133,8 +1133,8 @@ namespace VRChatImmersiveScaler
                 case "head_height":
                     {
                         // Draw from floor to head bone position
-                        float lowest = scalerCore.GetLowestPoint();
-                        float headHeight = scalerCore.GetFloorToHeadHeight();
+                        float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
+                        float headHeight = scalerCore.GetFloorToHeadHeight(parameters.useBoneBasedFloorCalculation);
                         Vector3 start = new Vector3(0, lowest, 0);
                         Vector3 end = new Vector3(0, lowest + headHeight, 0);
                         DrawHandlesLine(start, end, Color.green);
@@ -1184,7 +1184,7 @@ namespace VRChatImmersiveScaler
                             DrawHandlesLine(new Vector3(0, legY, 0), new Vector3(0, eyeY, 0), Color.green);
                         }
                         // Draw full eye height in blue
-                        float lowest = scalerCore.GetLowestPoint();
+                        float lowest = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
                         DrawHandlesLine(new Vector3(0.1f, lowest, 0), new Vector3(0.1f, scalerCore.GetEyeHeight(), 0), Color.blue);
                     }
                     break;

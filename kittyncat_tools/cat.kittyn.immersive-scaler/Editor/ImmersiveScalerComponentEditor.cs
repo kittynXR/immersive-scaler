@@ -3,6 +3,7 @@ using UnityEditor;
 using VRC.SDK3.Avatars.Components;
 using System.Collections.Generic;
 using System.Linq;
+using VRChatImmersiveScaler.Editor.EditorUI;
 
 namespace VRChatImmersiveScaler.Editor
 {
@@ -216,6 +217,10 @@ namespace VRChatImmersiveScaler.Editor
         private bool showDebugMeasurements = false;
         private bool showDebugRatios = false;
         
+        // Icon display
+        private Texture2D _iconTexture;
+        private Texture2D _iconBackground;
+        
         // Preview state tracking
         private bool isPreviewActive = false;
         private Dictionary<Transform, TransformState> originalTransformStates = new Dictionary<Transform, TransformState>();
@@ -248,6 +253,20 @@ namespace VRChatImmersiveScaler.Editor
         {
             var component = (ImmersiveScalerComponent)target;
             paramProvider = new ComponentParameterProvider(component);
+            
+            // Load icon using shared utility
+            if (_iconTexture == null)
+            {
+                _iconTexture = KittynIconUtility.LoadIcon("ImmersiveScaler", 
+                    "Packages/cat.kittyn.immersive-scaler/Editor/Icons/ImmersiveScaler.png",
+                    "Assets/kittyncat_tools/cat.kittyn.immersive-scaler/Editor/Icons/ImmersiveScaler.png");
+            }
+            
+            // Create icon background using shared utility
+            if (_iconBackground == null)
+            {
+                _iconBackground = KittynIconUtility.CreateColorTexture(KittynEditorTheme.IconBackgroundColor);
+            }
             
             var avatar = component.GetComponentInParent<VRCAvatarDescriptor>();
             if (avatar != null)
@@ -357,8 +376,49 @@ namespace VRChatImmersiveScaler.Editor
         
         // Remove the old DrawMeasurementWithHandles method - now using shared version
         
+        private void DrawCustomHeader()
+        {
+            // Create a style for the header
+            GUIStyle headerStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 16,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft
+            };
+            
+            EditorGUILayout.Space(5);
+            
+            // Draw header with icon
+            EditorGUILayout.BeginHorizontal();
+            
+            // Draw icon on the left
+            if (_iconTexture != null)
+            {
+                KittynIconUtility.DisplayIcon(_iconTexture, 64, KittynEditorTheme.IconBackgroundColor);
+            }
+            
+            // Draw title text next to icon
+            EditorGUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.LabelField("🐟 Immersive Scaler 📐📏🎨", headerStyle, GUILayout.Height(25));
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+            
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.Space(5);
+            
+            // Draw a separator line
+            EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, 1), new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            EditorGUILayout.Space(5);
+        }
+        
         public override void OnInspectorGUI()
         {
+            // Draw custom header
+            DrawCustomHeader();
+            
             var component = (ImmersiveScalerComponent)target;
             var avatar = component.GetComponentInParent<VRCAvatarDescriptor>();
             
@@ -668,24 +728,10 @@ namespace VRChatImmersiveScaler.Editor
         
         // Gizmo drawing is now handled by the component itself
     
-    [DrawGizmo(GizmoType.Selected | GizmoType.Active)]
-    static void DrawGizmos(ImmersiveScalerComponent component, GizmoType gizmoType)
-    {
-        if (string.IsNullOrEmpty(component.debugMeasurement)) return;
-        
-        // Debug to verify this is being called
-        // if (component.debugMeasurement != "")
-        // {
-        //     Debug.Log($"Drawing gizmo for: {component.debugMeasurement}");
-        // }
-        
-        var scalerCore = new ImmersiveScalerCore(component.gameObject);
-        var animator = component.GetComponent<Animator>();
-        if (animator == null || !animator.isHuman) return;
-        
-        DrawMeasurementGizmo(component.debugMeasurement, scalerCore, component);
-    }
+    // Gizmo handling moved to ImmersiveScalerGizmos.cs
     
+    // Helper methods for gizmo drawing - commented out
+    /*
     static void DrawGizmoLine(Vector3 start, Vector3 end, Color color)
     {
         Gizmos.color = color;
@@ -848,6 +894,7 @@ namespace VRChatImmersiveScaler.Editor
                 break;
         }
     }
+    */
     }
     
     // Reset method for when component is first added

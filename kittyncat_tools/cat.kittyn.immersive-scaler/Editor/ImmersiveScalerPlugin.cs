@@ -11,7 +11,7 @@ namespace VRChatImmersiveScaler.Editor
     public class ImmersiveScalerPlugin : Plugin<ImmersiveScalerPlugin>
     {
         public override string QualifiedName => "com.vrchat.immersivescaler";
-        public override string DisplayName => "VRChat Immersive Scaler";
+        public override string DisplayName => "🐟 Immersive Scaler 📐📏🎨";
         
         protected override void Configure()
         {

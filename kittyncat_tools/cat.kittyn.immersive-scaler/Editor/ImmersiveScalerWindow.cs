@@ -287,10 +287,10 @@ namespace VRChatImmersiveScaler
 #endif
         }
         
-        [MenuItem("Tools/⚙️🎨 kittyn.cat 🐟/🐟 Immersive Avatar Scaler", false, 1000)]
+        [MenuItem("Tools/⚙️🎨 kittyn.cat 🐟/🐟 Immersive Scaler 📐📏🎨", false, 1000)]
         public static void ShowWindow()
         {
-            var window = GetWindow<ImmersiveScalerWindow>("Immersive Avatar Scaler");
+            var window = GetWindow<ImmersiveScalerWindow>("Immersive Scaler");
             window.minSize = new Vector2(400, 600);
         }
         
@@ -312,9 +312,13 @@ namespace VRChatImmersiveScaler
             {
                 fontSize = 18,
                 fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter
+                alignment = TextAnchor.MiddleCenter,
+                richText = true
             };
-            EditorGUILayout.LabelField("Immersive Avatar Scaler", titleStyle);
+            
+            // Try using GUIContent which might handle Unicode better
+            GUIContent titleContent = new GUIContent("🐟 Immersive Scaler 📐📏🎨");
+            EditorGUILayout.LabelField(titleContent, titleStyle, GUILayout.Height(25));
             EditorGUILayout.Space(10);
             
             // Initialize parameter provider if needed

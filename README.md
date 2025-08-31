@@ -158,6 +158,13 @@ Rizz up your immersion! No blender required and non-destructive!
 - Check avatar hierarchy - root should be at avatar base
 - Use preview mode to verify before building
 
+#### Floor Measurement Issues
+If your avatar's floor is being detected far below the actual feet:
+- This happens when mesh bounds extend beyond visible geometry
+- Common causes: blend shapes, hidden meshes, or incorrect bounds from modeling software
+- **Solution**: Enable "Use Bone-Based Floor" in Advanced Options
+- This uses foot/toe bone positions instead of mesh bounds for accurate floor detection
+
 ### Performance Considerations
 - Immersive Scaler adds no runtime overhead
 - Component automatically removes itself after build

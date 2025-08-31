@@ -286,7 +286,7 @@ namespace VRChatImmersiveScaler
         }
         
         // Get upper body portion (from eyes to legs)
-        public float GetUpperBodyPortion()
+        public float GetUpperBodyPortion(bool useBoneBasedFloorCalculation = false)
         {
             float eyeHeight = GetEyeHeight();
             Transform leftLeg = GetBone(HumanBodyBones.LeftUpperLeg);
@@ -296,7 +296,7 @@ namespace VRChatImmersiveScaler
                 return 0.44f; // Default value
                 
             float legHeight = (leftLeg.position.y + rightLeg.position.y) / 2f;
-            float lowestPoint = GetLowestPoint();
+            float lowestPoint = GetLowestPoint(useBoneBasedFloorCalculation);
             
             return 1f - (legHeight - lowestPoint) / (eyeHeight - lowestPoint);
         }
@@ -861,18 +861,18 @@ namespace VRChatImmersiveScaler
         }
         
         // Simple arm length divided by total height
-        public float GetSimpleArmRatio()
+        public float GetSimpleArmRatio(bool useBoneBasedFloorCalculation = false)
         {
             float armLength = GetArmLength();
-            float totalHeight = GetHighestPoint() - GetLowestPoint();
+            float totalHeight = GetHighestPoint() - GetLowestPoint(useBoneBasedFloorCalculation);
             return armLength / totalHeight;
         }
         
         // Arm length divided by eye height
-        public float GetArmToEyeRatio()
+        public float GetArmToEyeRatio(bool useBoneBasedFloorCalculation = false)
         {
             float armLength = GetArmLength();
-            float eyeHeight = GetEyeHeight() - GetLowestPoint();
+            float eyeHeight = GetEyeHeight() - GetLowestPoint(useBoneBasedFloorCalculation);
             return armLength / eyeHeight;
         }
         
@@ -944,23 +944,23 @@ namespace VRChatImmersiveScaler
         }
         
         // Get head height (floor to neck)
-        public float GetHeadHeight()
+        public float GetHeadHeight(bool useBoneBasedFloorCalculation = false)
         {
             Transform neck = GetBone(HumanBodyBones.Neck);
             if (neck == null)
                 return GetEyeHeight() - 0.1f; // Fallback
                 
-            return neck.position.y - GetLowestPoint();
+            return neck.position.y - GetLowestPoint(useBoneBasedFloorCalculation);
         }
         
         // Get floor to head height (floor to head bone base)
-        public float GetFloorToHeadHeight()
+        public float GetFloorToHeadHeight(bool useBoneBasedFloorCalculation = false)
         {
             Transform head = GetBone(HumanBodyBones.Head);
             if (head == null)
-                return GetHighestPoint() - GetLowestPoint(); // Fallback to total height
+                return GetHighestPoint() - GetLowestPoint(useBoneBasedFloorCalculation); // Fallback to total height
                 
-            return head.position.y - GetLowestPoint();
+            return head.position.y - GetLowestPoint(useBoneBasedFloorCalculation);
         }
         
         // Get alternate upper body ratio
@@ -1065,10 +1065,10 @@ namespace VRChatImmersiveScaler
         }
         
         // Get upper body ratio based on selected methods
-        public float GetUpperBodyRatio(bool useNeckForHeight, bool useNeckForTorso)
+        public float GetUpperBodyRatio(bool useNeckForHeight, bool useNeckForTorso, bool useBoneBasedFloorCalculation = false)
         {
             // Height: floor to neck or floor to head
-            float height = useNeckForHeight ? GetHeadHeight() : GetFloorToHeadHeight();
+            float height = useNeckForHeight ? GetHeadHeight(useBoneBasedFloorCalculation) : GetFloorToHeadHeight(useBoneBasedFloorCalculation);
             
             // Torso: upper leg to neck or upper leg to head
             Transform leftLeg = GetBone(HumanBodyBones.LeftUpperLeg);

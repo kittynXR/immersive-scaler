@@ -1,10 +1,4 @@
 using UnityEngine;
-#if VRC_SDK_VRCSDK3
-using VRC.SDKBase;
-using IImmersiveScalerEditorOnly = VRC.SDKBase.IEditorOnly;
-#else
-using IImmersiveScalerEditorOnly = VRChatImmersiveScaler.IEditorOnly;
-#endif
 
 namespace VRChatImmersiveScaler
 {
@@ -32,9 +26,9 @@ namespace VRChatImmersiveScaler
         AlternateUpperBody
     }
     
-    [AddComponentMenu("VRChat/Immersive Scaler")]
+    [AddComponentMenu("VRChat/🐟 Immersive Scaler 📐📏🎨")]
     [DisallowMultipleComponent]
-    public class ImmersiveScalerComponent : MonoBehaviour, IImmersiveScalerEditorOnly
+    public class ImmersiveScalerComponent : MonoBehaviour
     {
         [Header("Basic Settings")]
         [Tooltip("Target height of the avatar in meters")]
@@ -140,11 +134,4 @@ namespace VRChatImmersiveScaler
         public bool upperBodyUseLegacy = true; // true = use legacy (leg to eye)/(floor to eye) calculation
     }
     
-    // Fallback interface for non-VRChat environments
-#if !VRC_SDK_VRCSDK3
-    public interface IEditorOnly
-    {
-        // Marker interface
-    }
-#endif
 }
