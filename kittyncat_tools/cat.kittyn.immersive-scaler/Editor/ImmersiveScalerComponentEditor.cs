@@ -4,6 +4,7 @@ using VRC.SDK3.Avatars.Components;
 using System.Collections.Generic;
 using System.Linq;
 using VRChatImmersiveScaler.Editor.EditorUI;
+using Kittyn.Tools;
 
 namespace VRChatImmersiveScaler.Editor
 {

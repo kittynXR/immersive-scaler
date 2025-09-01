@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using VRC.SDK3.Avatars.Components;
+using Kittyn.Tools;
 
 namespace VRChatImmersiveScaler
 {
@@ -290,7 +291,7 @@ namespace VRChatImmersiveScaler
         [MenuItem("Tools/⚙️🎨 kittyn.cat 🐟/🐟 Immersive Scaler 📐📏🎨", false, 1000)]
         public static void ShowWindow()
         {
-            var window = GetWindow<ImmersiveScalerWindow>("Immersive Scaler");
+            var window = GetWindow<ImmersiveScalerWindow>(KittynLocalization.Get("immersive_scaler.window_title"));
             window.minSize = new Vector2(400, 600);
         }
         
@@ -317,7 +318,7 @@ namespace VRChatImmersiveScaler
             };
             
             // Try using GUIContent which might handle Unicode better
-            GUIContent titleContent = new GUIContent("🐟 Immersive Scaler 📐📏🎨");
+            GUIContent titleContent = new GUIContent(KittynLocalization.Get("immersive_scaler.title_content"));
             EditorGUILayout.LabelField(titleContent, titleStyle, GUILayout.Height(25));
             EditorGUILayout.Space(10);
             
@@ -332,7 +333,7 @@ namespace VRChatImmersiveScaler
             
             if (selectedAvatar == null)
             {
-                EditorGUILayout.HelpBox("Please select a VRChat avatar with a Humanoid animator.", MessageType.Info);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.select_vrchat_avatar"), MessageType.Info);
                 return;
             }
             
@@ -369,7 +370,7 @@ namespace VRChatImmersiveScaler
             EditorGUILayout.Space(5);
             
             // Body Proportions - show as foldout in window
-            showBodyProportions = EditorGUILayout.Foldout(showBodyProportions, "Body Proportions", true);
+            showBodyProportions = EditorGUILayout.Foldout(showBodyProportions, KittynLocalization.Get("immersive_scaler.body_proportions"), true);
             if (showBodyProportions)
             {
                 ImmersiveScalerUIShared.DrawBodyProportionsSection(paramProvider, scalerCore);
@@ -378,7 +379,7 @@ namespace VRChatImmersiveScaler
             EditorGUILayout.Space(5);
             
             // Scaling Options - show as foldout in window
-            showScalingOptions = EditorGUILayout.Foldout(showScalingOptions, "Scaling Options", true);
+            showScalingOptions = EditorGUILayout.Foldout(showScalingOptions, KittynLocalization.Get("immersive_scaler.scaling_options"), true);
             if (showScalingOptions)
             {
                 ImmersiveScalerUIShared.DrawScalingOptionsSection(paramProvider);
@@ -404,11 +405,11 @@ namespace VRChatImmersiveScaler
         private void DrawAvatarSelection()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Avatar Selection", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.avatar_selection"), EditorStyles.boldLabel);
             
             EditorGUI.BeginChangeCheck();
             selectedAvatar = (GameObject)EditorGUILayout.ObjectField(
-                "Avatar", 
+                KittynLocalization.Get("immersive_scaler.avatar"), 
                 selectedAvatar, 
                 typeof(GameObject), 
                 true
@@ -464,7 +465,7 @@ namespace VRChatImmersiveScaler
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             
             parameters.centerModel = EditorGUILayout.Toggle(
-                new GUIContent("Center Model", "Move avatar to X=0, Z=0"),
+                new GUIContent(KittynLocalization.Get("immersive_scaler.center_model"), KittynLocalization.Get("immersive_scaler.center_model_tooltip")),
                 parameters.centerModel
             );
             
@@ -476,13 +477,13 @@ namespace VRChatImmersiveScaler
                 EditorGUILayout.BeginHorizontal();
                 
                 GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
-                if (GUILayout.Button("Preview Scaling", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.preview_scaling"), GUILayout.Height(30)))
                 {
                     StartPreview();
                 }
                 
                 GUI.backgroundColor = new Color(1f, 0.5f, 0.5f);
-                if (GUILayout.Button("Reset Scales", GUILayout.Width(100), GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.reset_scales"), GUILayout.Width(100), GUILayout.Height(30)))
                 {
                     ResetScales();
                 }
@@ -494,18 +495,18 @@ namespace VRChatImmersiveScaler
             else
             {
                 // In preview mode - show apply and cancel buttons
-                EditorGUILayout.HelpBox("Preview Mode Active - Changes are temporary", MessageType.Info);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.preview_mode_active"), MessageType.Info);
                 
                 EditorGUILayout.BeginHorizontal();
                 
                 GUI.backgroundColor = new Color(0.3f, 0.8f, 0.3f);
-                if (GUILayout.Button("Apply Changes", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.apply_changes"), GUILayout.Height(30)))
                 {
                     ApplyPreview();
                 }
                 
                 GUI.backgroundColor = new Color(1f, 0.5f, 0.5f);
-                if (GUILayout.Button("Cancel Preview", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.cancel_preview"), GUILayout.Height(30)))
                 {
                     CancelPreview();
                 }
@@ -520,31 +521,31 @@ namespace VRChatImmersiveScaler
         
         private void DrawAdditionalTools()
         {
-            showAdditionalTools = EditorGUILayout.Foldout(showAdditionalTools, "Additional Tools", true);
+            showAdditionalTools = EditorGUILayout.Foldout(showAdditionalTools, KittynLocalization.Get("immersive_scaler.additional_tools"), true);
             if (showAdditionalTools)
             {
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 
-                EditorGUILayout.LabelField("Finger Spreading", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.finger_spreading"), EditorStyles.boldLabel);
                 
                 paramProvider.spareThumb = EditorGUILayout.Toggle(
-                    new GUIContent("Ignore Thumb", "Don't spread the thumb"),
+                    new GUIContent(KittynLocalization.Get("immersive_scaler.ignore_thumb"), KittynLocalization.Get("immersive_scaler.ignore_thumb_tooltip")),
                     paramProvider.spareThumb
                 );
                 
                 paramProvider.fingerSpreadFactor = EditorGUILayout.Slider(
-                    new GUIContent("Spread Factor", "How much to spread fingers apart"),
+                    new GUIContent(KittynLocalization.Get("immersive_scaler.spread_factor"), KittynLocalization.Get("immersive_scaler.spread_factor_tooltip")),
                     paramProvider.fingerSpreadFactor, 0f, 2f
                 );
                 
-                if (GUILayout.Button("Apply Finger Spreading"))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.apply_finger_spreading")))
                 {
                     SpreadFingers();
                 }
                 
                 EditorGUILayout.Space(10);
                 
-                EditorGUILayout.LabelField("Hip Bone Fix", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.hip_bone_fix"), EditorStyles.boldLabel);
                 
                 if (GUILayout.Button("Shrink Hip Bone"))
                 {
