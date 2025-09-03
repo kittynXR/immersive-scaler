@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using VRC.SDK3.Avatars.Components;
-using Kittyn.Tools;
+using Kittyn.Tools.ImmersiveScaler;
 
 namespace VRChatImmersiveScaler
 {
@@ -547,7 +547,7 @@ namespace VRChatImmersiveScaler
                 
                 EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.hip_bone_fix"), EditorStyles.boldLabel);
                 
-                if (GUILayout.Button("Shrink Hip Bone"))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.shrink_hip_bone")))
                 {
                     ShrinkHipBone();
                 }
@@ -562,17 +562,17 @@ namespace VRChatImmersiveScaler
             
             if (IsNDMFAvailable())
             {
-                EditorGUILayout.LabelField("Non-Destructive Setup Available", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.ndmf_non_destructive_available"), EditorStyles.boldLabel);
                 EditorGUILayout.Space(5);
                 
                 // Check if component already exists
                 var existingComponent = selectedAvatar.GetComponentInChildren<ImmersiveScalerComponent>();
                 if (existingComponent != null)
                 {
-                    EditorGUILayout.HelpBox("Immersive Scaler component already exists on this avatar.", MessageType.Info);
+                    EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.ndmf_component_exists"), MessageType.Info);
                     
                     GUI.backgroundColor = Color.cyan;
-                    if (GUILayout.Button("Select Component", GUILayout.Height(30)))
+                    if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.ndmf_select_component"), GUILayout.Height(30)))
                     {
                         Selection.activeGameObject = existingComponent.gameObject;
                         EditorGUIUtility.PingObject(existingComponent);
@@ -582,7 +582,7 @@ namespace VRChatImmersiveScaler
                 else
                 {
                     GUI.backgroundColor = Color.green;
-                    if (GUILayout.Button("Add as NDMF Component (Recommended)", GUILayout.Height(40)))
+                    if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.ndmf_add_component_recommended"), GUILayout.Height(40)))
                     {
                         AddNDMFComponent();
                     }
@@ -593,25 +593,25 @@ namespace VRChatImmersiveScaler
                 
                 GUI.backgroundColor = Color.yellow;
                 EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button("Use Destructive Version Instead", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.ndmf_use_destructive_instead"), GUILayout.Height(30)))
                 {
                     showNDMFOptions = false;
                 }
                 EditorGUILayout.EndHorizontal();
                 GUI.backgroundColor = Color.white;
                 
-                EditorGUILayout.HelpBox("⚠️ The destructive version makes permanent changes to your avatar. Make sure to duplicate your avatar before using it!", MessageType.Warning);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.ndmf_warning_duplicate_avatar"), MessageType.Warning);
             }
             else
             {
-                EditorGUILayout.LabelField("Destructive Mode Only", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("NDMF is not installed in this project. The tool will make permanent changes to your avatar.", MessageType.Warning);
+                EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.ndmf_destructive_only_title"), EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.ndmf_not_installed"), MessageType.Warning);
                 EditorGUILayout.Space(5);
-                EditorGUILayout.HelpBox("⚠️ It is highly recommended to duplicate your avatar before proceeding as changes cannot be undone once the scene is saved!", MessageType.Warning);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.ndmf_destructive_warning"), MessageType.Warning);
                 EditorGUILayout.Space(5);
                 
                 GUI.backgroundColor = Color.yellow;
-                if (GUILayout.Button("Continue with Destructive Version", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.ndmf_continue_destructive"), GUILayout.Height(30)))
                 {
                     showNDMFOptions = false;
                 }
@@ -648,7 +648,7 @@ namespace VRChatImmersiveScaler
             Selection.activeGameObject = componentHolder.gameObject;
             EditorGUIUtility.PingObject(component);
             
-            Debug.Log("Added Immersive Scaler component to avatar. The component will be applied non-destructively during avatar build.");
+            Debug.Log(KittynLocalization.Get("immersive_scaler.info_component_added_non_destructive"));
         }
         
         private void AutoPopulateComponent(ImmersiveScalerComponent component)
@@ -706,7 +706,7 @@ namespace VRChatImmersiveScaler
             var descriptor = selectedAvatar.GetComponent<VRCAvatarDescriptor>();
             if (descriptor == null)
             {
-                Debug.LogError("Selected object must be a VRChat avatar with VRCAvatarDescriptor!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_selected_object_must_be_vrchat_avatar"));
                 selectedAvatar = null;
                 scalerCore = null;
                 showNDMFOptions = true;
@@ -716,7 +716,7 @@ namespace VRChatImmersiveScaler
             Animator animator = selectedAvatar.GetComponent<Animator>();
             if (animator == null || !animator.isHuman)
             {
-                Debug.LogError("Selected avatar must have a Humanoid animator!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_selected_avatar_must_have_humanoid"));
                 selectedAvatar = null;
                 scalerCore = null;
                 showNDMFOptions = true;
@@ -754,14 +754,14 @@ namespace VRChatImmersiveScaler
         {
             if (scalerCore == null || selectedAvatar == null)
             {
-                Debug.LogError("No valid avatar selected!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_no_valid_avatar_selected"));
                 return;
             }
             
             var descriptor = selectedAvatar.GetComponent<VRCAvatarDescriptor>();
             if (descriptor == null)
             {
-                Debug.LogError("No VRCAvatarDescriptor found on avatar!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_no_vrchat_avatar_descriptor"));
                 return;
             }
             
@@ -839,14 +839,14 @@ namespace VRChatImmersiveScaler
         {
             if (scalerCore == null)
             {
-                Debug.LogError("No valid avatar selected!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_no_valid_avatar_selected"));
                 return;
             }
             
             var descriptor = selectedAvatar.GetComponent<VRCAvatarDescriptor>();
             if (descriptor == null)
             {
-                Debug.LogError("No VRCAvatarDescriptor found on avatar!");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_no_vrchat_avatar_descriptor"));
                 return;
             }
             
@@ -925,7 +925,7 @@ namespace VRChatImmersiveScaler
             
             if (hips == null || spine == null || leftLeg == null || rightLeg == null)
             {
-                Debug.LogError("Cannot find required bones for hip shrinking");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_cannot_find_required_bones"));
                 return;
             }
             

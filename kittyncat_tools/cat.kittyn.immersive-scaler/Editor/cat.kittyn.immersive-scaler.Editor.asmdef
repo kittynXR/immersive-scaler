@@ -28,6 +28,16 @@
             "name": "nadena.dev.ndmf",
             "expression": "",
             "define": "NDMF_AVAILABLE"
+        },
+        {
+            "name": "cat.kittyn.comfi-hierarchy",
+            "expression": "",
+            "define": "HAS_COMFI_HIERARCHY"
+        },
+        {
+            "name": "cat.kittyn.enhanced-dynamics",
+            "expression": "",
+            "define": "HAS_ENHANCED_DYNAMICS"
         }
     ],
     "optionalUnityReferences": [],

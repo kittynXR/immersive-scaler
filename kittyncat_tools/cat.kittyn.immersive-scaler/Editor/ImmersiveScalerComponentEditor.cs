@@ -4,7 +4,7 @@ using VRC.SDK3.Avatars.Components;
 using System.Collections.Generic;
 using System.Linq;
 using VRChatImmersiveScaler.Editor.EditorUI;
-using Kittyn.Tools;
+using Kittyn.Tools.ImmersiveScaler;
 
 namespace VRChatImmersiveScaler.Editor
 {
@@ -401,7 +401,7 @@ namespace VRChatImmersiveScaler.Editor
             // Draw title text next to icon
             EditorGUILayout.BeginVertical();
             GUILayout.FlexibleSpace();
-            EditorGUILayout.LabelField("🐟 Immersive Scaler 📐📏🎨", headerStyle, GUILayout.Height(25));
+            EditorGUILayout.LabelField(KittynLocalization.Get("immersive_scaler.comp_header"), headerStyle, GUILayout.Height(25));
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
             
@@ -425,7 +425,7 @@ namespace VRChatImmersiveScaler.Editor
             
             if (avatar == null)
             {
-                EditorGUILayout.HelpBox("This component must be on a VRChat avatar with a VRCAvatarDescriptor!", MessageType.Error);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.comp_error_requires_avatar"), MessageType.Error);
                 return;
             }
             
@@ -476,7 +476,7 @@ namespace VRChatImmersiveScaler.Editor
             {
                 // Not in preview mode - show preview button
                 GUI.backgroundColor = new Color(0.5f, 0.8f, 1f);
-                if (GUILayout.Button("Preview Scaling", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.comp_preview_scaling"), GUILayout.Height(30)))
                 {
                     StartPreview(component, avatar);
                 }
@@ -485,17 +485,17 @@ namespace VRChatImmersiveScaler.Editor
             else
             {
                 // In preview mode - show cancel button
-                EditorGUILayout.HelpBox("Preview Mode Active - Showing how avatar will look after build", MessageType.Info);
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.comp_preview_active"), MessageType.Info);
                 
                 GUI.backgroundColor = new Color(1f, 0.5f, 0.5f);
-                if (GUILayout.Button("Cancel Preview", GUILayout.Height(30)))
+                if (GUILayout.Button(KittynLocalization.Get("immersive_scaler.comp_cancel_preview"), GUILayout.Height(30)))
                 {
                     ResetPreview(component, avatar);
                 }
                 GUI.backgroundColor = Color.white;
             }
             
-            EditorGUILayout.HelpBox("Scaling will be applied automatically when building/uploading the avatar to VRChat.", MessageType.Info);
+            EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.comp_build_info"), MessageType.Info);
             
             serializedObject.ApplyModifiedProperties();
         }
@@ -711,7 +711,7 @@ namespace VRChatImmersiveScaler.Editor
             
             if (hips == null || spine == null || leftLeg == null || rightLeg == null)
             {
-                Debug.LogError("Cannot find required bones for hip shrinking");
+                Debug.LogError(KittynLocalization.Get("immersive_scaler.error_cannot_find_bones_hip_shrinking"));
                 return;
             }
             
