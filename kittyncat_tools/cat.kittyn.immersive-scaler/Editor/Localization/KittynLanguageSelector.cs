@@ -91,6 +91,17 @@ namespace Kittyn.Tools.ImmersiveScaler
         {
             return KittynLocalization.CurrentLanguage != "ca";
         }
+        
+        [MenuItem("Tools/⚙️🎨 kittyn.cat 🐟/🌐 Language/🔧 Reset Language to English", false, MENU_PRIORITY + 10)]
+        private static void ResetLanguageToDefault()
+        {
+            Debug.Log("[Immersive Scaler] Force resetting language to English...");
+            EditorPrefs.DeleteKey("KittynTools_Language");
+            EditorPrefs.DeleteKey("KittynTools_Language_Timestamp");
+            KittynLocalization.RefreshLanguages();
+            SetLanguage("en", "English");
+            Debug.Log("[Immersive Scaler] Language reset complete. Language is now: " + KittynLocalization.CurrentLanguage);
+        }
 #endif
         
         private static void SetLanguage(string languageCode, string languageName)
