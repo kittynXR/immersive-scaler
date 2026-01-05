@@ -159,7 +159,7 @@ namespace VRChatImmersiveScaler
                 DrawMeasurementWithToggle(parameters, armLabel, $"{armValue:F3}m", GetMeasurementKeyForArmType(parameters.armToHeightRatioMethod));
                 
                 // Current scale ratio using selected methods
-                float heightForRatio = scalerCore.GetHeightByMethod(parameters.armToHeightHeightMethod);
+                float heightForRatio = scalerCore.GetHeightByMethod(parameters.armToHeightHeightMethod, parameters.useBoneBasedFloorCalculation);
                 float currentRatio = heightForRatio > 0 ? armValue / (heightForRatio - 0.005f) : 0.4537f;
                 DrawMeasurementWithToggle(parameters, KittynLocalization.Get("immersive_scaler.arm_to_height_ratio"), $"{currentRatio:F4}", "current_scale_ratio");
                 
@@ -252,7 +252,7 @@ namespace VRChatImmersiveScaler
                     
                     DrawMeasurementWithToggle(parameters, KittynLocalization.Get("immersive_scaler.simple_arm_height"), $"{scalerCore.GetSimpleArmRatio(parameters.useBoneBasedFloorCalculation):F4}", "simple_arm_height");
                     DrawMeasurementWithToggle(parameters, KittynLocalization.Get("immersive_scaler.arm_eye_height"), $"{scalerCore.GetArmToEyeRatio(parameters.useBoneBasedFloorCalculation):F4}", "arm_eye_height");
-                    DrawMeasurementWithToggle(parameters, KittynLocalization.Get("immersive_scaler.head_tpose_eye_height"), $"{scalerCore.GetCurrentScaling():F4}", "head_tpose_eye_height");
+                    DrawMeasurementWithToggle(parameters, KittynLocalization.Get("immersive_scaler.head_tpose_eye_height"), $"{scalerCore.GetCurrentScaling(parameters.useBoneBasedFloorCalculation):F4}", "head_tpose_eye_height");
                     
                     // Additional calculations
                     float shoulderToFingertipRatio = scalerCore.GetShoulderToFingertip() / debugTotalHeight;
@@ -302,7 +302,7 @@ namespace VRChatImmersiveScaler
             }
             if (GUILayout.Button(KittynLocalization.Get("common.get_current"), GUILayout.Width(80)))
             {
-                parameters.targetHeight = scalerCore.GetHeightByMethod(parameters.targetHeightMethod);
+                parameters.targetHeight = scalerCore.GetHeightByMethod(parameters.targetHeightMethod, parameters.useBoneBasedFloorCalculation);
                 parameters.SetDirty();
             }
             EditorGUILayout.EndHorizontal();
@@ -360,7 +360,7 @@ namespace VRChatImmersiveScaler
             if (GUILayout.Button(KittynLocalization.Get("common.get_current"), GUILayout.Width(80)))
             {
                 float armValue = scalerCore.GetArmByMethod(parameters.armToHeightRatioMethod);
-                float heightValue = scalerCore.GetHeightByMethod(parameters.armToHeightHeightMethod);
+                float heightValue = scalerCore.GetHeightByMethod(parameters.armToHeightHeightMethod, parameters.useBoneBasedFloorCalculation);
                 parameters.customScaleRatio = heightValue > 0 ? armValue / (heightValue - 0.005f) : 0.4537f;
                 parameters.SetDirty();
             }

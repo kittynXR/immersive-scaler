@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Conditionally enable Modular Avatar integration without hard dependency.
@@ -129,6 +130,16 @@ namespace VRChatImmersiveScaler
         
         [Tooltip("Use bone positions instead of mesh bounds for floor calculation (more reliable but less accurate)")]
         public bool useBoneBasedFloorCalculation = false;
+
+        [Header("Measurement Overrides")]
+        [Tooltip("If enabled, floor/height measurements will use only the specified body/head SkinnedMeshRenderers. This helps ignore props or bad bounds from other meshes.")]
+        public bool useMeasurementRendererOverrides = false;
+
+        [Tooltip("Skinned mesh renderers that represent the main body (used for floor + height measurement)")]
+        public List<SkinnedMeshRenderer> measurementBodyRenderers = new List<SkinnedMeshRenderer>();
+
+        [Tooltip("Optional skinned mesh renderers that represent the head (included for height measurement)")]
+        public List<SkinnedMeshRenderer> measurementHeadRenderers = new List<SkinnedMeshRenderer>();
         
         // Store original ViewPosition for restoration if needed
         [HideInInspector]

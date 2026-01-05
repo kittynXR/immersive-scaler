@@ -217,6 +217,7 @@ namespace VRChatImmersiveScaler.Editor
         private bool showAdditionalTools = false;
         private bool showDebugMeasurements = false;
         private bool showDebugRatios = false;
+        private bool showMeasurementOverrides = false;
         
         // Icon display
         private Texture2D _iconTexture;
@@ -273,6 +274,11 @@ namespace VRChatImmersiveScaler.Editor
             if (avatar != null)
             {
                 scalerCore = new ImmersiveScalerCore(avatar.gameObject);
+                scalerCore.SetMeasurementRendererOverrides(
+                    component.useMeasurementRendererOverrides,
+                    component.measurementBodyRenderers,
+                    component.measurementHeadRenderers
+                );
                 
                 // Auto-populate values if they're at defaults
                 if (Mathf.Approximately(component.targetHeight, 1.61f) && 
@@ -436,6 +442,7 @@ namespace VRChatImmersiveScaler.Editor
             }
             
             serializedObject.Update();
+            ApplyMeasurementOverridesToScalerCore();
             
             // Current Stats Section
             Vector3 origViewPos = component.hasStoredOriginalViewPosition ? component.originalViewPosition : avatar.ViewPosition;
@@ -443,6 +450,9 @@ namespace VRChatImmersiveScaler.Editor
             
             // Measurement Config Section
             ImmersiveScalerUIShared.DrawMeasurementConfigSection(paramProvider, scalerCore, ref showDebugMeasurements, ref showDebugRatios);
+
+            // Measurement Overrides Section
+            DrawMeasurementOverridesSection(component);
             
             EditorGUILayout.Space();
             
@@ -499,6 +509,99 @@ namespace VRChatImmersiveScaler.Editor
             
             serializedObject.ApplyModifiedProperties();
         }
+
+        private void ApplyMeasurementOverridesToScalerCore()
+        {
+            if (scalerCore == null) return;
+
+            var enabledProp = serializedObject.FindProperty("useMeasurementRendererOverrides");
+            var bodyProp = serializedObject.FindProperty("measurementBodyRenderers");
+            var headProp = serializedObject.FindProperty("measurementHeadRenderers");
+            if (enabledProp == null || bodyProp == null || headProp == null) return;
+
+            bool enabled = enabledProp.boolValue;
+
+            var body = new List<SkinnedMeshRenderer>();
+            for (int i = 0; i < bodyProp.arraySize; i++)
+            {
+                if (bodyProp.GetArrayElementAtIndex(i).objectReferenceValue is SkinnedMeshRenderer smr)
+                {
+                    body.Add(smr);
+                }
+            }
+
+            var head = new List<SkinnedMeshRenderer>();
+            for (int i = 0; i < headProp.arraySize; i++)
+            {
+                if (headProp.GetArrayElementAtIndex(i).objectReferenceValue is SkinnedMeshRenderer smr)
+                {
+                    head.Add(smr);
+                }
+            }
+
+            scalerCore.SetMeasurementRendererOverrides(enabled, body, head);
+        }
+
+        private void DrawMeasurementOverridesSection(ImmersiveScalerComponent component)
+        {
+            showMeasurementOverrides = EditorGUILayout.Foldout(showMeasurementOverrides, KittynLocalization.Get("immersive_scaler.measurement_overrides"), true);
+            if (!showMeasurementOverrides) return;
+
+            EditorGUI.indentLevel++;
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            var useOverridesProp = serializedObject.FindProperty("useMeasurementRendererOverrides");
+            var bodyProp = serializedObject.FindProperty("measurementBodyRenderers");
+            var headProp = serializedObject.FindProperty("measurementHeadRenderers");
+
+            useOverridesProp.boolValue = EditorGUILayout.Toggle(
+                new GUIContent(
+                    KittynLocalization.Get("immersive_scaler.field_use_measurement_renderer_overrides"),
+                    KittynLocalization.Get("immersive_scaler.use_measurement_renderer_overrides_tooltip")
+                ),
+                useOverridesProp.boolValue
+            );
+
+            if (useOverridesProp.boolValue)
+            {
+                EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.measurement_overrides_help"), MessageType.Info);
+
+                bool hasBodyRenderer = false;
+                for (int i = 0; i < bodyProp.arraySize; i++)
+                {
+                    if (bodyProp.GetArrayElementAtIndex(i).objectReferenceValue != null)
+                    {
+                        hasBodyRenderer = true;
+                        break;
+                    }
+                }
+
+                if (!hasBodyRenderer)
+                {
+                    EditorGUILayout.HelpBox(KittynLocalization.Get("immersive_scaler.measurement_overrides_missing_body_warning"), MessageType.Warning);
+                }
+
+                EditorGUILayout.PropertyField(
+                    bodyProp,
+                    new GUIContent(
+                        KittynLocalization.Get("immersive_scaler.field_measurement_body_renderers"),
+                        KittynLocalization.Get("immersive_scaler.measurement_body_renderers_tooltip")
+                    ),
+                    true
+                );
+                EditorGUILayout.PropertyField(
+                    headProp,
+                    new GUIContent(
+                        KittynLocalization.Get("immersive_scaler.field_measurement_head_renderers"),
+                        KittynLocalization.Get("immersive_scaler.measurement_head_renderers_tooltip")
+                    ),
+                    true
+                );
+            }
+
+            EditorGUILayout.EndVertical();
+            EditorGUI.indentLevel--;
+        }
         
         private void StartPreview(ImmersiveScalerComponent component, VRCAvatarDescriptor avatar)
         {
@@ -536,6 +639,11 @@ namespace VRChatImmersiveScaler.Editor
             
             // Apply scaling
             var scalerCore = new ImmersiveScalerCore(avatar.gameObject);
+            scalerCore.SetMeasurementRendererOverrides(
+                component.useMeasurementRendererOverrides,
+                component.measurementBodyRenderers,
+                component.measurementHeadRenderers
+            );
             
             // Measure original eye height and position
             float originalEyeHeight = scalerCore.GetEyeHeight();
@@ -665,26 +773,27 @@ namespace VRChatImmersiveScaler.Editor
             if (scalerCore == null) return;
             
             // Get current height
+            float floor = scalerCore.GetLowestPoint(component.useBoneBasedFloorCalculation);
             float height = component.scaleEyes ? 
-                scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint() :
-                scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
+                scalerCore.GetEyeHeight() - floor :
+                scalerCore.GetHighestPoint() - floor;
             component.targetHeight = height;
             
             // Get current upper body percentage using the component's selected methods
             float upperBodyRatio;
             if (component.upperBodyUseLegacy)
             {
-                upperBodyRatio = scalerCore.GetUpperBodyPortion();
+                upperBodyRatio = scalerCore.GetUpperBodyPortion(component.useBoneBasedFloorCalculation);
             }
             else
             {
-                upperBodyRatio = scalerCore.GetUpperBodyRatio(component.upperBodyUseNeck, component.upperBodyTorsoUseNeck);
+                upperBodyRatio = scalerCore.GetUpperBodyRatio(component.upperBodyUseNeck, component.upperBodyTorsoUseNeck, component.useBoneBasedFloorCalculation);
             }
             component.upperBodyPercentage = upperBodyRatio * 100f;
             
             // Get current scale ratio using selected measurement methods
             float armValue = scalerCore.GetArmByMethod(component.armToHeightRatioMethod);
-            float heightValue = scalerCore.GetHeightByMethod(component.armToHeightHeightMethod);
+            float heightValue = scalerCore.GetHeightByMethod(component.armToHeightHeightMethod, component.useBoneBasedFloorCalculation);
             component.customScaleRatio = heightValue > 0 ? armValue / (heightValue - 0.005f) : 0.4537f;
             
             // Get current arm/leg thickness
@@ -918,17 +1027,18 @@ namespace VRChatImmersiveScaler.Editor
                     var scalerCore = new ImmersiveScalerCore(avatar.gameObject);
                     
                     // Auto-populate values
+                    float floor = scalerCore.GetLowestPoint(scalerComponent.useBoneBasedFloorCalculation);
                     float height = scalerComponent.scaleEyes ? 
-                        scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint() :
-                        scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
+                        scalerCore.GetEyeHeight() - floor :
+                        scalerCore.GetHighestPoint() - floor;
                     scalerComponent.targetHeight = height;
                     // Default to legacy method when first adding component
                     scalerComponent.upperBodyUseLegacy = true;
-                    scalerComponent.upperBodyPercentage = scalerCore.GetUpperBodyPortion() * 100f;
+                    scalerComponent.upperBodyPercentage = scalerCore.GetUpperBodyPortion(scalerComponent.useBoneBasedFloorCalculation) * 100f;
                     
                     // Calculate scale ratio using default measurement methods
                     float armValue = scalerCore.GetArmByMethod(scalerComponent.armToHeightRatioMethod);
-                    float heightValue = scalerCore.GetHeightByMethod(scalerComponent.armToHeightHeightMethod);
+                    float heightValue = scalerCore.GetHeightByMethod(scalerComponent.armToHeightHeightMethod, scalerComponent.useBoneBasedFloorCalculation);
                     scalerComponent.customScaleRatio = heightValue > 0 ? armValue / (heightValue - 0.005f) : 0.4537f;
                     scalerComponent.armThickness = scalerCore.GetCurrentArmThickness() * 100f;
                     scalerComponent.legThickness = scalerCore.GetCurrentLegThickness() * 100f;

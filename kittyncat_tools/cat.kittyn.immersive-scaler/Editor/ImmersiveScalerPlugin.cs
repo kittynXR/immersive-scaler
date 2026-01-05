@@ -40,10 +40,15 @@ namespace VRChatImmersiveScaler.Editor
                     
                     // Create scaling core
                     var scalerCore = new ImmersiveScalerCore(ctx.AvatarRootTransform.gameObject);
+                    scalerCore.SetMeasurementRendererOverrides(
+                        component.useMeasurementRendererOverrides,
+                        component.measurementBodyRenderers,
+                        component.measurementHeadRenderers
+                    );
                     
                     // Measure original eye height and position
                     float originalEyeHeight = scalerCore.GetEyeHeight();
-                    float originalLowestPoint = scalerCore.GetLowestPoint();
+                    float originalLowestPoint = scalerCore.GetLowestPoint(component.useBoneBasedFloorCalculation);
                     float originalAvatarHeight = originalEyeHeight - originalLowestPoint;
                     Vector3 originalEyeLocalPos = scalerCore.GetEyePositionLocal();
                     
@@ -85,7 +90,7 @@ namespace VRChatImmersiveScaler.Editor
                     
                     // Measure new eye position after scaling
                     float newEyeHeight = scalerCore.GetEyeHeight();
-                    float newLowestPoint = scalerCore.GetLowestPoint();
+                    float newLowestPoint = scalerCore.GetLowestPoint(component.useBoneBasedFloorCalculation);
                     Vector3 newEyeLocalPos = scalerCore.GetEyePositionLocal();
                     
                     // Calculate the actual scale ratio applied to the avatar
@@ -114,7 +119,7 @@ namespace VRChatImmersiveScaler.Editor
                         Debug.Log($"  Eye Height (World) - Before: {originalEyeHeight:F3}, After: {newEyeHeight:F3}");
                     }
                     
-                    Debug.Log($"ImmersiveScaler: Scaling complete. Final height: {scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint():F3}m");
+                    Debug.Log($"ImmersiveScaler: Scaling complete. Final height: {scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint(component.useBoneBasedFloorCalculation):F3}m");
                     
                     // Apply additional tools if enabled
                     if (component.applyFingerSpreading)

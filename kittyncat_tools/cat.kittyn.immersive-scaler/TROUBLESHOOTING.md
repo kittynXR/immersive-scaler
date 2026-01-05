@@ -69,9 +69,10 @@ This is often caused by incorrect scale calculations or bone orientation issues.
    - Top of head includes hair/accessories which may throw off calculations
 
 2. **Check Mesh Bounds**
-   - Tool uses mesh bounds for height calculations
-   - Accessories or clothing may extend beyond body
-   - Try hiding non-body meshes temporarily
+   - Tool prefers humanoid body meshes (legs/hips) for floor/height measurements and ignores obvious outlier bounds
+   - If a prop is still affecting measurements, enable "Measurement Overrides" on the component and assign only your body/head meshes
+   - If you still have issues, enable "Use bone-based floor calculation" (Debug Options) and/or fix incorrect `SkinnedMeshRenderer` bounds on your avatar meshes
+   - Props/weapons with large bounds can still cause problems if they are merged into the main body mesh
 
 ### Debug Information
 

@@ -6,9 +6,21 @@ namespace VRChatImmersiveScaler
 {
     public class ImmersiveScalerCore
     {
+        private const float MaxAllowedMeshBelowFootBonesMeters = 0.5f;
+        private const float MaxAllowedMeshAboveHeadBoneMeters = 2.0f;
+
         private Animator animator;
         public GameObject avatarRoot { get; private set; }
         private Dictionary<HumanBodyBones, Transform> bones;
+
+        private bool hasLoggedNoMeshesWarning;
+        private bool hasLoggedFloorOutlierWarning;
+        private bool hasLoggedHeightOutlierWarning;
+
+        private bool useMeasurementRendererOverrides;
+        private bool hasLoggedInvalidMeasurementOverridesWarning;
+        private List<SkinnedMeshRenderer> measurementBodyRendererOverrides;
+        private List<SkinnedMeshRenderer> measurementHeadRendererOverrides;
         
         public ImmersiveScalerCore(GameObject avatar)
         {
@@ -19,6 +31,145 @@ namespace VRChatImmersiveScaler
                 bones = VRCBoneMapper.GetAllBones(animator);
             }
         }
+
+        public void SetMeasurementRendererOverrides(
+            bool enabled,
+            IEnumerable<SkinnedMeshRenderer> bodyRenderers,
+            IEnumerable<SkinnedMeshRenderer> headRenderers
+        )
+        {
+            if (useMeasurementRendererOverrides != enabled)
+            {
+                hasLoggedInvalidMeasurementOverridesWarning = false;
+            }
+            useMeasurementRendererOverrides = enabled;
+
+            if (!enabled)
+            {
+                measurementBodyRendererOverrides = null;
+                measurementHeadRendererOverrides = null;
+                return;
+            }
+
+            measurementBodyRendererOverrides = FilterAndDeduplicateSkinnedMeshRenderers(bodyRenderers);
+            measurementHeadRendererOverrides = FilterAndDeduplicateSkinnedMeshRenderers(headRenderers);
+        }
+
+        private List<SkinnedMeshRenderer> FilterAndDeduplicateSkinnedMeshRenderers(IEnumerable<SkinnedMeshRenderer> renderers)
+        {
+            if (renderers == null) return null;
+
+            var result = new List<SkinnedMeshRenderer>();
+            var seen = new HashSet<SkinnedMeshRenderer>();
+            Transform root = avatarRoot != null ? avatarRoot.transform : null;
+
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null || renderer.sharedMesh == null) continue;
+                if (!seen.Add(renderer)) continue;
+                if (root != null && !renderer.transform.IsChildOf(root)) continue;
+                result.Add(renderer);
+            }
+
+            return result.Count > 0 ? result : null;
+        }
+
+        private List<SkinnedMeshRenderer> GetEnabledSkinnedMeshes()
+        {
+            if (avatarRoot == null) return new List<SkinnedMeshRenderer>();
+
+            var renderers = avatarRoot.GetComponentsInChildren<SkinnedMeshRenderer>();
+            var result = new List<SkinnedMeshRenderer>(renderers.Length);
+
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null || renderer.sharedMesh == null) continue;
+                if (!renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                result.Add(renderer);
+            }
+
+            return result;
+        }
+
+        private static List<SkinnedMeshRenderer> GetEnabledSkinnedMeshesFrom(IEnumerable<SkinnedMeshRenderer> renderers)
+        {
+            if (renderers == null) return new List<SkinnedMeshRenderer>();
+
+            var result = new List<SkinnedMeshRenderer>();
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null || renderer.sharedMesh == null) continue;
+                if (!renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                result.Add(renderer);
+            }
+
+            return result;
+        }
+
+        private static bool RendererHasBone(SkinnedMeshRenderer renderer, Transform boneTransform)
+        {
+            if (renderer == null || boneTransform == null) return false;
+
+            var rendererBones = renderer.bones;
+            if (rendererBones == null) return false;
+
+            for (int i = 0; i < rendererBones.Length; i++)
+            {
+                if (rendererBones[i] == boneTransform) return true;
+            }
+
+            return false;
+        }
+
+        private bool RendererUsesAnyHumanoidBones(SkinnedMeshRenderer renderer, params HumanBodyBones[] boneTypes)
+        {
+            if (renderer == null || boneTypes == null || boneTypes.Length == 0) return false;
+
+            foreach (var boneType in boneTypes)
+            {
+                var boneTransform = GetBone(boneType);
+                if (RendererHasBone(renderer, boneTransform)) return true;
+            }
+
+            return false;
+        }
+
+        private List<SkinnedMeshRenderer> FilterMeshesForFloor(List<SkinnedMeshRenderer> meshes)
+        {
+            var filtered = meshes
+                .Where(m => RendererUsesAnyHumanoidBones(m, HumanBodyBones.LeftFoot, HumanBodyBones.RightFoot, HumanBodyBones.LeftToes, HumanBodyBones.RightToes))
+                .ToList();
+            if (filtered.Count > 0) return filtered;
+
+            filtered = meshes
+                .Where(m => RendererUsesAnyHumanoidBones(m,
+                    HumanBodyBones.LeftUpperLeg, HumanBodyBones.RightUpperLeg,
+                    HumanBodyBones.LeftLowerLeg, HumanBodyBones.RightLowerLeg,
+                    HumanBodyBones.LeftFoot, HumanBodyBones.RightFoot,
+                    HumanBodyBones.LeftToes, HumanBodyBones.RightToes))
+                .ToList();
+            if (filtered.Count > 0) return filtered;
+
+            filtered = meshes.Where(m => RendererUsesAnyHumanoidBones(m, HumanBodyBones.Hips)).ToList();
+            return filtered.Count > 0 ? filtered : meshes;
+        }
+
+        private List<SkinnedMeshRenderer> FilterMeshesForHeight(List<SkinnedMeshRenderer> meshes)
+        {
+            // Prefer meshes that look like the "main body" (hips + legs), which typically excludes props like hats/weapons.
+            var filtered = meshes
+                .Where(m => RendererUsesAnyHumanoidBones(m, HumanBodyBones.Hips) &&
+                            RendererUsesAnyHumanoidBones(m,
+                                HumanBodyBones.LeftUpperLeg, HumanBodyBones.RightUpperLeg,
+                                HumanBodyBones.LeftLowerLeg, HumanBodyBones.RightLowerLeg,
+                                HumanBodyBones.LeftFoot, HumanBodyBones.RightFoot,
+                                HumanBodyBones.LeftToes, HumanBodyBones.RightToes))
+                .ToList();
+            if (filtered.Count > 0) return filtered;
+
+            filtered = meshes.Where(m => RendererUsesAnyHumanoidBones(m, HumanBodyBones.Hips)).ToList();
+            return filtered.Count > 0 ? filtered : meshes;
+        }
         
         // Get the lowest point of all meshes (floor level)
         public float GetLowestPoint(bool useBoneBasedCalculation = false)
@@ -27,32 +178,90 @@ namespace VRChatImmersiveScaler
             {
                 return GetLowestPointFromBones();
             }
-            
-            float lowestPoint = float.MaxValue;
-            
-            // Get all skinned mesh renderers
-            SkinnedMeshRenderer[] meshes = avatarRoot.GetComponentsInChildren<SkinnedMeshRenderer>();
-            
-            foreach (var mesh in meshes)
+
+            List<SkinnedMeshRenderer> meshes;
+            List<SkinnedMeshRenderer> candidates;
+            if (useMeasurementRendererOverrides)
             {
-                if (mesh.sharedMesh == null) continue;
-                if (!mesh.enabled || !mesh.gameObject.activeInHierarchy) continue;
-                
-                // SkinnedMeshRenderer bounds are automatically updated by Unity
-                Bounds bounds = mesh.bounds;
-                float meshLowest = bounds.min.y;
-                
+                meshes = GetEnabledSkinnedMeshesFrom(measurementBodyRendererOverrides);
+                if (meshes.Count == 0)
+                {
+                    if (!hasLoggedInvalidMeasurementOverridesWarning)
+                    {
+                        hasLoggedInvalidMeasurementOverridesWarning = true;
+                        Debug.LogWarning("ImmersiveScaler: Measurement renderer overrides are enabled but no valid Body renderers are set; falling back to automatic mesh selection");
+                    }
+                    meshes = GetEnabledSkinnedMeshes();
+                    candidates = FilterMeshesForFloor(meshes);
+                }
+                else
+                {
+                    candidates = meshes;
+                }
+            }
+            else
+            {
+                meshes = GetEnabledSkinnedMeshes();
+                candidates = FilterMeshesForFloor(meshes);
+            }
+
+            if (meshes.Count == 0)
+            {
+                if (!hasLoggedNoMeshesWarning)
+                {
+                    hasLoggedNoMeshesWarning = true;
+                    Debug.LogWarning("ImmersiveScaler: No mesh bounds found, falling back to bone-based floor calculation");
+                }
+                return GetLowestPointFromBones();
+            }
+
+            // Use foot/toe bones as a sanity baseline (root/all-bone fallbacks can be far above the actual floor).
+            float footBoneFloor = float.MaxValue;
+            Transform leftFoot = GetBone(HumanBodyBones.LeftFoot);
+            Transform rightFoot = GetBone(HumanBodyBones.RightFoot);
+            Transform leftToes = GetBone(HumanBodyBones.LeftToes);
+            Transform rightToes = GetBone(HumanBodyBones.RightToes);
+
+            if (leftFoot != null) footBoneFloor = Mathf.Min(footBoneFloor, leftFoot.position.y);
+            if (rightFoot != null) footBoneFloor = Mathf.Min(footBoneFloor, rightFoot.position.y);
+            if (leftToes != null) footBoneFloor = Mathf.Min(footBoneFloor, leftToes.position.y);
+            if (rightToes != null) footBoneFloor = Mathf.Min(footBoneFloor, rightToes.position.y);
+
+            float boneFloor = GetLowestPointFromBones();
+            float lowestPoint = float.MaxValue;
+            int ignoredOutliers = 0;
+
+            foreach (var mesh in candidates)
+            {
+                float meshLowest = mesh.bounds.min.y;
+
+                // Sanity-check: if the mesh min is far below the humanoid foot bones, it's likely a prop or bad bounds.
+                if (footBoneFloor != float.MaxValue && meshLowest < footBoneFloor - MaxAllowedMeshBelowFootBonesMeters)
+                {
+                    ignoredOutliers++;
+                    continue;
+                }
+
                 if (meshLowest < lowestPoint)
                     lowestPoint = meshLowest;
             }
-            
-            // If no meshes found, use bone-based calculation
+
             if (lowestPoint == float.MaxValue)
             {
-                Debug.LogWarning("ImmersiveScaler: No mesh bounds found, falling back to bone-based calculation");
-                return GetLowestPointFromBones();
+                if (ignoredOutliers > 0 && !hasLoggedFloorOutlierWarning)
+                {
+                    hasLoggedFloorOutlierWarning = true;
+                    Debug.LogWarning($"ImmersiveScaler: Ignored {ignoredOutliers} outlier mesh bounds while finding floor; using bone-based floor instead");
+                }
+                return boneFloor;
             }
-            
+
+            if (ignoredOutliers > 0 && !hasLoggedFloorOutlierWarning)
+            {
+                hasLoggedFloorOutlierWarning = true;
+                Debug.LogWarning($"ImmersiveScaler: Ignored {ignoredOutliers} outlier mesh bounds while finding floor (likely props or bad bounds)");
+            }
+
             return lowestPoint;
         }
         
@@ -79,10 +288,13 @@ namespace VRChatImmersiveScaler
             // If still no valid point, check all bones
             if (lowestPoint == float.MaxValue)
             {
-                foreach (var bone in bones.Values)
+                if (bones != null)
                 {
-                    if (bone != null)
-                        lowestPoint = Mathf.Min(lowestPoint, bone.position.y);
+                    foreach (var bone in bones.Values)
+                    {
+                        if (bone != null)
+                            lowestPoint = Mathf.Min(lowestPoint, bone.position.y);
+                    }
                 }
             }
             
@@ -99,35 +311,90 @@ namespace VRChatImmersiveScaler
         // Get the highest point of all meshes
         public float GetHighestPoint()
         {
-            float highestPoint = float.MinValue;
-            
-            SkinnedMeshRenderer[] meshes = avatarRoot.GetComponentsInChildren<SkinnedMeshRenderer>();
-            
-            foreach (var mesh in meshes)
+            List<SkinnedMeshRenderer> meshes;
+            List<SkinnedMeshRenderer> candidates;
+            if (useMeasurementRendererOverrides)
             {
-                if (mesh.sharedMesh == null) continue;
-                
-                Bounds bounds = mesh.bounds;
-                float meshHighest = bounds.max.y;
-                
-                if (meshHighest > highestPoint)
-                    highestPoint = meshHighest;
-            }
-            
-            // If no meshes found, use head position
-            if (highestPoint == float.MinValue)
-            {
-                Transform head = GetBone(HumanBodyBones.Head);
-                if (head != null)
+                var overrideCandidates = new List<SkinnedMeshRenderer>();
+                var seen = new HashSet<SkinnedMeshRenderer>();
+                foreach (var renderer in GetEnabledSkinnedMeshesFrom(measurementBodyRendererOverrides))
                 {
-                    highestPoint = head.position.y + 0.1f; // Add small offset
+                    if (seen.Add(renderer)) overrideCandidates.Add(renderer);
+                }
+                foreach (var renderer in GetEnabledSkinnedMeshesFrom(measurementHeadRendererOverrides))
+                {
+                    if (seen.Add(renderer)) overrideCandidates.Add(renderer);
+                }
+
+                meshes = overrideCandidates;
+                if (meshes.Count == 0)
+                {
+                    if (!hasLoggedInvalidMeasurementOverridesWarning)
+                    {
+                        hasLoggedInvalidMeasurementOverridesWarning = true;
+                        Debug.LogWarning("ImmersiveScaler: Measurement renderer overrides are enabled but no valid Body/Head renderers are set; falling back to automatic mesh selection");
+                    }
+                    meshes = GetEnabledSkinnedMeshes();
+                    candidates = FilterMeshesForHeight(meshes);
                 }
                 else
                 {
-                    highestPoint = avatarRoot.transform.position.y + 1.5f;
+                    candidates = meshes;
                 }
             }
-            
+            else
+            {
+                meshes = GetEnabledSkinnedMeshes();
+                candidates = FilterMeshesForHeight(meshes);
+            }
+
+            Transform head = GetBone(HumanBodyBones.Head);
+            float headY = head != null ? head.position.y : float.NaN;
+
+            float highestPoint = float.MinValue;
+            int ignoredOutliers = 0;
+
+            foreach (var mesh in candidates)
+            {
+                float meshHighest = mesh.bounds.max.y;
+
+                // Sanity-check: if mesh max is wildly above the head bone, it's likely a prop or bad bounds.
+                if (!float.IsNaN(headY) && meshHighest > headY + MaxAllowedMeshAboveHeadBoneMeters)
+                {
+                    ignoredOutliers++;
+                    continue;
+                }
+
+                if (meshHighest > highestPoint)
+                    highestPoint = meshHighest;
+            }
+
+            if (highestPoint == float.MinValue)
+            {
+                // Fallback to head position
+                if (head != null)
+                {
+                    return head.position.y + 0.1f;
+                }
+
+                return avatarRoot.transform.position.y + 1.5f;
+            }
+
+            // Ensure we never under-report height below the head bone (common when the head is a separate mesh).
+            if (head != null)
+            {
+                highestPoint = Mathf.Max(highestPoint, head.position.y + 0.1f);
+            }
+
+            if (ignoredOutliers > 0)
+            {
+                if (!hasLoggedHeightOutlierWarning)
+                {
+                    hasLoggedHeightOutlierWarning = true;
+                    Debug.LogWarning($"ImmersiveScaler: Ignored {ignoredOutliers} outlier mesh bounds while finding height (likely props or bad bounds)");
+                }
+            }
+
             return highestPoint;
         }
         
@@ -271,10 +538,10 @@ namespace VRChatImmersiveScaler
         // NOTE: This method uses hardcoded HeadToHand and EyeHeight measurements.
         // For accurate results that match the scaling algorithm, use GetArmByMethod() and GetHeightByMethod()
         // with your desired measurement types, then calculate: armValue / (heightValue - 0.005f)
-        public float GetCurrentScaling()
+        public float GetCurrentScaling(bool useBoneBasedFloorCalculation = false)
         {
             float eyeHeight = GetEyeHeight();
-            float lowestPoint = GetLowestPoint();
+            float lowestPoint = GetLowestPoint(useBoneBasedFloorCalculation);
             float currentHeight = eyeHeight - lowestPoint;
             
             float headToHand = HeadToHand();
@@ -359,13 +626,17 @@ namespace VRChatImmersiveScaler
                 // Move to floor
                 if (!parameters.skipFloor)
                 {
-                    MoveToFloor();
+                    MoveToFloor(parameters.useBoneBasedFloorCalculation);
                 }
                 
                 // Scale to target height
                 if (!parameters.skipScale)
                 {
-                    ScaleToHeight(parameters.targetHeight, parameters.targetHeightMethod == HeightMethodType.EyeHeight);
+                    ScaleToHeight(
+                        parameters.targetHeight,
+                        parameters.targetHeightMethod == HeightMethodType.EyeHeight,
+                        parameters.useBoneBasedFloorCalculation
+                    );
                 }
                 
                 // Center model
@@ -377,10 +648,10 @@ namespace VRChatImmersiveScaler
                 return;
             }
             
-            float lowestPoint = GetLowestPoint();
+            float lowestPoint = GetLowestPoint(parameters.useBoneBasedFloorCalculation);
             
             // Use the configured height method
-            float currentHeight = GetHeightByMethod(parameters.armToHeightHeightMethod);
+            float currentHeight = GetHeightByMethod(parameters.armToHeightHeightMethod, parameters.useBoneBasedFloorCalculation);
             
             Debug.Log($"Current measurements - Lowest: {lowestPoint}, Height (using {parameters.armToHeightHeightMethod}): {currentHeight}");
             
@@ -417,8 +688,8 @@ namespace VRChatImmersiveScaler
             {
                 Debug.Log("Using keep head size mode");
                 float currentUbp = parameters.upperBodyUseLegacy ? 
-                    GetUpperBodyPortion() : 
-                    GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck);
+                    GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) : 
+                    GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation);
                 float targetUbp = parameters.upperBodyPercentage / 100f;
                 float torsoScaleRatio = targetUbp / currentUbp;
                 legScaleRatio = (1f - targetUbp) / (1f - currentUbp);
@@ -433,8 +704,8 @@ namespace VRChatImmersiveScaler
             {
                 Debug.Log("Using standard upper body percentage mode");
                 float ubp = parameters.upperBodyUseLegacy ? 
-                    GetUpperBodyPortion() : 
-                    GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck);
+                    GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) : 
+                    GetUpperBodyRatio(parameters.upperBodyUseNeck, parameters.upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation);
                 float targetUbp = parameters.upperBodyPercentage / 100f;
                 float ubScaleRatio = ubp / targetUbp;
                 
@@ -456,7 +727,13 @@ namespace VRChatImmersiveScaler
             float legThickness = 0.8f + (legThicknessNorm * 0.4f);
             Debug.Log($"Leg thickness calculation: {parameters.legThickness}% -> {legThickness}");
             
-            ScaleLegs(legScaleRatio, legThickness, parameters.scaleFoot, parameters.thighPercentage / 100f);
+            ScaleLegs(
+                legScaleRatio,
+                legThickness,
+                parameters.scaleFoot,
+                parameters.thighPercentage / 100f,
+                parameters.useBoneBasedFloorCalculation
+            );
             
             // Apply arm scaling
             // Simple thickness adjustment: 0% = 0.8x, 50% = 1.0x, 100% = 1.2x
@@ -490,7 +767,7 @@ namespace VRChatImmersiveScaler
             Debug.Log("=== Avatar Scaling Complete ===");
         }
         
-        private void ScaleLegs(float legScaleRatio, float thickness, bool scaleFoot, float thighPercentage)
+        private void ScaleLegs(float legScaleRatio, float thickness, bool scaleFoot, float thighPercentage, bool useBoneBasedFloorCalculation)
         {
             // Get leg bones
             Transform leftUpperLeg = GetBone(HumanBodyBones.LeftUpperLeg);
@@ -504,7 +781,7 @@ namespace VRChatImmersiveScaler
             Debug.Log($"Thickness parameter: {thickness}, should be different from legScaleRatio: {legScaleRatio}");
             
             // Get current leg proportions
-            float[] legProportions = GetLegProportions();
+            float[] legProportions = GetLegProportions(useBoneBasedFloorCalculation);
             float thighPortion = legProportions[0];
             float calfPortion = legProportions[1];
             float footPortion = legProportions[2];
@@ -644,7 +921,7 @@ namespace VRChatImmersiveScaler
             return scale;
         }
         
-        private float[] GetLegProportions()
+        private float[] GetLegProportions(bool useBoneBasedFloorCalculation)
         {
             Transform leftUpperLeg = GetBone(HumanBodyBones.LeftUpperLeg);
             Transform leftLowerLeg = GetBone(HumanBodyBones.LeftLowerLeg);
@@ -653,7 +930,7 @@ namespace VRChatImmersiveScaler
             if (leftUpperLeg == null || leftLowerLeg == null || leftFoot == null)
                 return new float[] { 0.5f, 0.4f, 0.1f }; // Default proportions
                 
-            float lowestPoint = GetLowestPoint();
+            float lowestPoint = GetLowestPoint(useBoneBasedFloorCalculation);
             float legTop = leftUpperLeg.position.y;
             float knee = leftLowerLeg.position.y;
             float ankle = leftFoot.position.y;
@@ -1029,9 +1306,9 @@ namespace VRChatImmersiveScaler
         }
         
         // Get height measurement based on selected method
-        public float GetHeightByMethod(HeightMethodType method)
+        public float GetHeightByMethod(HeightMethodType method, bool useBoneBasedFloorCalculation = false)
         {
-            float lowest = GetLowestPoint();
+            float lowest = GetLowestPoint(useBoneBasedFloorCalculation);
             switch (method)
             {
                 case HeightMethodType.TotalHeight:

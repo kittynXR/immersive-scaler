@@ -654,20 +654,21 @@ namespace VRChatImmersiveScaler
         private void AutoPopulateComponent(ImmersiveScalerComponent component)
         {
             // Get current height
+            float floor = scalerCore.GetLowestPoint(parameters.useBoneBasedFloorCalculation);
             float height = parameters.scaleEyes ? 
-                scalerCore.GetEyeHeight() - scalerCore.GetLowestPoint() :
-                scalerCore.GetHighestPoint() - scalerCore.GetLowestPoint();
+                scalerCore.GetEyeHeight() - floor :
+                scalerCore.GetHighestPoint() - floor;
             component.targetHeight = height;
             
             // Set legacy mode and get current upper body percentage
             component.upperBodyUseLegacy = upperBodyUseLegacy;
             component.upperBodyPercentage = upperBodyUseLegacy ? 
-                scalerCore.GetUpperBodyPortion() * 100f :
-                scalerCore.GetUpperBodyRatio(upperBodyUseNeck, upperBodyTorsoUseNeck) * 100f;
+                scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) * 100f :
+                scalerCore.GetUpperBodyRatio(upperBodyUseNeck, upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation) * 100f;
             
             // Calculate scale ratio using measurement methods
             float armValue = scalerCore.GetArmByMethod(armToHeightRatioMethod);
-            float heightValue = scalerCore.GetHeightByMethod(armToHeightHeightMethod);
+            float heightValue = scalerCore.GetHeightByMethod(armToHeightHeightMethod, parameters.useBoneBasedFloorCalculation);
             component.customScaleRatio = heightValue > 0 ? armValue / (heightValue - 0.005f) : 0.4537f;
             
             // Copy measurement method settings
@@ -724,6 +725,15 @@ namespace VRChatImmersiveScaler
             }
             
             scalerCore = new ImmersiveScalerCore(selectedAvatar);
+            var existingComponent = selectedAvatar.GetComponentInChildren<ImmersiveScalerComponent>(true);
+            if (existingComponent != null)
+            {
+                scalerCore.SetMeasurementRendererOverrides(
+                    existingComponent.useMeasurementRendererOverrides,
+                    existingComponent.measurementBodyRenderers,
+                    existingComponent.measurementHeadRenderers
+                );
+            }
             showNDMFOptions = true; // Reset to show NDMF options for new avatar
             
             // Auto-populate values when avatar is selected
@@ -735,14 +745,14 @@ namespace VRChatImmersiveScaler
             if (scalerCore == null) return;
             
             // Get current values
-            parameters.targetHeight = scalerCore.GetHeightByMethod(targetHeightMethod);
+            parameters.targetHeight = scalerCore.GetHeightByMethod(targetHeightMethod, parameters.useBoneBasedFloorCalculation);
             parameters.upperBodyPercentage = upperBodyUseLegacy ? 
-                scalerCore.GetUpperBodyPortion() * 100f :
-                scalerCore.GetUpperBodyRatio(upperBodyUseNeck, upperBodyTorsoUseNeck) * 100f;
+                scalerCore.GetUpperBodyPortion(parameters.useBoneBasedFloorCalculation) * 100f :
+                scalerCore.GetUpperBodyRatio(upperBodyUseNeck, upperBodyTorsoUseNeck, parameters.useBoneBasedFloorCalculation) * 100f;
             
             // Calculate arm ratio
             float armValue = scalerCore.GetArmByMethod(armToHeightRatioMethod);
-            float heightValue = scalerCore.GetHeightByMethod(armToHeightHeightMethod);
+            float heightValue = scalerCore.GetHeightByMethod(armToHeightHeightMethod, parameters.useBoneBasedFloorCalculation);
             parameters.customScaleRatio = heightValue > 0 ? armValue / (heightValue - 0.005f) : 0.4537f;
             
             parameters.thighPercentage = scalerCore.GetThighPercentage() * 100f;
