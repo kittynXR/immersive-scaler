@@ -16,6 +16,13 @@ namespace VRChatImmersiveScaler.Editor
         protected override void Configure()
         {
             InPhase(BuildPhase.Transforming)
+                // If this runs before armature merge tools (e.g. Modular Avatar Merge Armature),
+                // those tools may rewrite bindposes to preserve the outfit's *current* appearance and
+                // effectively cancel out the scaling we apply to humanoid bones.
+                //
+                // Running after MA ensures merged/retargeted outfits are already bound to the avatar armature,
+                // so they receive the same bone scaling as the base body.
+                .AfterPlugin("nadena.dev.modular-avatar")
                 .Run("Apply Immersive Scaling", ctx =>
                 {
                     var component = ctx.AvatarRootTransform.GetComponentInChildren<ImmersiveScalerComponent>(true);
